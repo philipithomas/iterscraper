@@ -41,7 +41,7 @@ func main() {
 
 	go emitTasks(taskChan)
 
-	for i := 0; i <= concurrency; i++ {
+	for i := 0; i < concurrency; i++ {
 		go scrape(taskChan, dataChan)
 	}
 
