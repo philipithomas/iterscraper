@@ -49,9 +49,6 @@ func (s *site) fetch() {
 	s.address = strings.TrimSpace(doc.Find(addressQuery).Text())
 	s.phone = strings.TrimSpace(doc.Find(phoneQuery).Text())
 	s.email = strings.TrimSpace(doc.Find(phoneQuery).Text())
-
-	// Clean up address data because it often has line breaks
-	//s.address = new:ineRe.ReplaceAllString(s.address, " replace")
 }
 
 // Include headers with the row output format so that we can compare easily.

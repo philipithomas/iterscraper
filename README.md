@@ -71,7 +71,6 @@ Building the source requires the [Go programming language](https://golang.org/do
 go get github.com/PuerkitoBio/goquery
 # Get and build source
 go get github.com/philipithomas/iterscraper
-
 # If your $PATH is configured correctly, you can call it directly
 iterscraper [flags]
 
