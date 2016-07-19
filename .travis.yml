@@ -6,6 +6,6 @@ go:
 sudo: false
 
 install:
-  - go get https://github.com/PuerkitoBio/goquery
+  - go get github.com/PuerkitoBio/goquery
 script:
   - test.sh
