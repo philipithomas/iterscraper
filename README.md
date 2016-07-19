@@ -23,11 +23,13 @@ http://example.com/foo/%d/bar
 
 ## Installation
 
-Building the source requires the [Go programming language](https://golang.org/doc/install).
+Building the source requires the [Go programming language](https://golang.org/doc/install) and the [Glide](http://glide.sh) package manager.
 
 ```
 # Get and build source
 go get github.com/philipithomas/iterscraper
+# Install dependencies
+glide install
 # If your $PATH is configured correctly, you can call it directly
 iterscraper [flags]
 
