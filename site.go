@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 
@@ -31,6 +32,11 @@ func (s *site) fetch() {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
+		// Check for rate limiting
+		if resp.StatusCode == 429 {
+			log.Fatal("You are being rate limited - program exiting")
+		}
+
 		s.err = fmt.Errorf("Bad response from server - status code %d\n", resp.StatusCode)
 		return
 	}

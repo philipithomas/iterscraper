@@ -6,6 +6,6 @@ go:
 sudo: false
 
 install:
-  - curl https://glide.sh/get | sh
+  - go get https://github.com/PuerkitoBio/goquery
 script:
   - test.sh
