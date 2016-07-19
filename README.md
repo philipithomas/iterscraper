@@ -1,5 +1,7 @@
 # iterscraper
 
+[![Build Status](https://travis-ci.org/philipithomas/iterscraper.svg?branch=master)](https://travis-ci.org/philipithomas/iterscraper)
+
 A basic package used for scraping information from a website where URLs contain an incrementing integer. Information is retrieved from HTML5 elements, and outputted as a CSV.
 
 ## Flags
