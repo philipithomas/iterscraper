@@ -30,6 +30,7 @@ func main() {
 	)
 	flag.Parse()
 
+	// Create all tasks and send them to the channel.
 	type task struct {
 		url string
 		id  int
@@ -42,39 +43,71 @@ func main() {
 		close(tasks)
 	}()
 
-	sites := make(chan *site)
+	// Create workers and schedule closing results when all work is done.
+	results := make(chan []string)
 	var wg sync.WaitGroup
 	wg.Add(*concurrency)
 	go func() {
 		wg.Wait()
-		close(sites)
+		close(results)
 	}()
 
 	for i := 0; i < *concurrency; i++ {
 		go func() {
 			defer wg.Done()
 			for t := range tasks {
-				site, err := fetch(t.url, t.id, *name, *address, *phone, *email)
+				r, err := fetch(t.url, t.id, *name, *address, *phone, *email)
 				if err != nil {
 					log.Printf("could not fetch %v: %v", t.url, err)
 					continue
 				}
-				sites <- site
+				results <- r
 			}
 		}()
 	}
 
-	dumpCSV(*outfile, sites)
+	if err := dumpCSV(*outfile, results); err != nil {
+		log.Printf("could not write to %s: %v", *outfile, err)
+	}
 }
 
-func dumpCSV(path string, sites <-chan *site) error {
-	file, err := os.Create(path)
+func fetch(url string, id int, queries ...string) ([]string, error) {
+	res, err := http.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("could not get %s: %v", url, err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		if res.StatusCode == http.StatusTooManyRequests {
+			return nil, fmt.Errorf("you are being rate limited")
+		}
+
+		return nil, fmt.Errorf("bad response from server: %s", res.Status)
+	}
+
+	// Load response into GoQuery
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not parse page: %v", err)
+	}
+
+	// Extract info we want
+	r := []string{url, strconv.Itoa(id)}
+	for _, q := range queries {
+		r = append(r, strings.TrimSpace(doc.Find(q).Text()))
+	}
+	return r, nil
+}
+
+func dumpCSV(path string, records <-chan []string) error {
+	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("unable to create file %s: %v", path, err)
 	}
-	defer file.Close()
+	defer f.Close()
 
-	w := csv.NewWriter(file)
+	w := csv.NewWriter(f)
 	defer w.Flush()
 
 	// Write headers to file
@@ -82,58 +115,16 @@ func dumpCSV(path string, sites <-chan *site) error {
 		log.Fatalf("error writing record to csv: %v", err)
 	}
 
-	for s := range sites {
-		if err := w.Write([]string{strconv.Itoa(s.id), s.name, s.url, s.address, s.phone, s.email}); err != nil {
+	// Write all records
+	for r := range records {
+		if err := w.Write(r); err != nil {
 			log.Fatalf("could not write record to csv: %v", err)
 		}
 	}
 
+	// Check for extra errors
 	if err := w.Error(); err != nil {
 		return fmt.Errorf("writer failed: %v", err)
 	}
 	return nil
-}
-
-type site struct {
-	url     string
-	id      int
-	address string
-	phone   string
-	email   string
-	name    string
-}
-
-func fetch(url string, id int, nameQuery, addressQuery, phoneQuery, emailQuery string) (*site, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, fmt.Errorf("could not get %s: %v", url, err)
-	}
-
-	// GoQuery doesn't actually close the body - we have to do that
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		// Check for rate limiting
-		if resp.StatusCode == http.StatusTooManyRequests {
-			return nil, fmt.Errorf("you are being rate limited")
-		}
-
-		return nil, fmt.Errorf("bad response from server: %s", resp.Status)
-	}
-
-	// Load response into GoQuery
-	doc, err := goquery.NewDocumentFromReader(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse page: %v", err)
-	}
-
-	// Pull info we want
-	return &site{
-		url:     url,
-		id:      id,
-		name:    strings.TrimSpace(doc.Find(nameQuery).Text()),
-		address: strings.TrimSpace(doc.Find(addressQuery).Text()),
-		phone:   strings.TrimSpace(doc.Find(phoneQuery).Text()),
-		email:   strings.TrimSpace(doc.Find(emailQuery).Text()),
-	}, nil
 }
