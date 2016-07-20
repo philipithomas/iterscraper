@@ -30,7 +30,12 @@ func main() {
 	)
 	flag.Parse()
 
-	// Create all tasks and send them to the channel.
+	columns := []string{*name, *address, *phone, *email}
+	headers := []string{"name", "address", "phone", "email"}
+	// url and id are added as the first two rows.
+	headers = append([]string{"url", "id"}, headers...)
+
+	// create all tasks and send them to the channel.
 	type task struct {
 		url string
 		id  int
@@ -43,7 +48,7 @@ func main() {
 		close(tasks)
 	}()
 
-	// Create workers and schedule closing results when all work is done.
+	// create workers and schedule closing results when all work is done.
 	results := make(chan []string)
 	var wg sync.WaitGroup
 	wg.Add(*concurrency)
@@ -56,7 +61,7 @@ func main() {
 		go func() {
 			defer wg.Done()
 			for t := range tasks {
-				r, err := fetch(t.url, t.id, *name, *address, *phone, *email)
+				r, err := fetch(t.url, t.id, columns)
 				if err != nil {
 					log.Printf("could not fetch %v: %v", t.url, err)
 					continue
@@ -66,12 +71,12 @@ func main() {
 		}()
 	}
 
-	if err := dumpCSV(*outfile, results); err != nil {
+	if err := dumpCSV(*outfile, headers, results); err != nil {
 		log.Printf("could not write to %s: %v", *outfile, err)
 	}
 }
 
-func fetch(url string, id int, queries ...string) ([]string, error) {
+func fetch(url string, id int, queries []string) ([]string, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("could not get %s: %v", url, err)
@@ -86,13 +91,13 @@ func fetch(url string, id int, queries ...string) ([]string, error) {
 		return nil, fmt.Errorf("bad response from server: %s", res.Status)
 	}
 
-	// Load response into GoQuery
+	// parse body with goquery.
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("could not parse page: %v", err)
 	}
 
-	// Extract info we want
+	// extract info we want.
 	r := []string{url, strconv.Itoa(id)}
 	for _, q := range queries {
 		r = append(r, strings.TrimSpace(doc.Find(q).Text()))
@@ -100,7 +105,7 @@ func fetch(url string, id int, queries ...string) ([]string, error) {
 	return r, nil
 }
 
-func dumpCSV(path string, records <-chan []string) error {
+func dumpCSV(path string, headers []string, records <-chan []string) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return fmt.Errorf("unable to create file %s: %v", path, err)
@@ -110,19 +115,19 @@ func dumpCSV(path string, records <-chan []string) error {
 	w := csv.NewWriter(f)
 	defer w.Flush()
 
-	// Write headers to file
-	if err := w.Write([]string{"id", "name", "url", "address", "phone", "email"}); err != nil {
+	// write headers to file.
+	if err := w.Write(headers); err != nil {
 		log.Fatalf("error writing record to csv: %v", err)
 	}
 
-	// Write all records
+	// write all records.
 	for r := range records {
 		if err := w.Write(r); err != nil {
 			log.Fatalf("could not write record to csv: %v", err)
 		}
 	}
 
-	// Check for extra errors
+	// check for extra errors.
 	if err := w.Error(); err != nil {
 		return fmt.Errorf("writer failed: %v", err)
 	}
