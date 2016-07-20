@@ -32,7 +32,7 @@ func main() {
 
 	columns := []string{*name, *address, *phone, *email}
 	headers := []string{"name", "address", "phone", "email"}
-	// url and id are added as the first two rows.
+	// url and id are added as the first two columns.
 	headers = append([]string{"url", "id"}, headers...)
 
 	// create all tasks and send them to the channel.
