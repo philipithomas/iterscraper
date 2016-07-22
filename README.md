@@ -4,6 +4,8 @@
 
 A basic package used for scraping information from a website where URLs contain an incrementing integer. Information is retrieved from HTML5 elements, and outputted as a CSV.
 
+Thanks [Francesc](https://github.com/campoy) for featuring this repo in episode #1 of [Just For Func](https://twitter.com/justforfunc). [Watch The Video](https://www.youtube.com/watch?list=PL64wiCrrxh4Jisi7OcCJIUpguV_f5jGnZ&v=eIWFnNz8mF4) or [Review Francesc's pull request](https://github.com/philipithomas/iterscraper/pull/1).
+
 ## Flags
 
 Flags are all optional, and are set with a single dash on the command line, e.g.
