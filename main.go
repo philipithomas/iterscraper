@@ -113,7 +113,6 @@ func dumpCSV(path string, headers []string, records <-chan []string) error {
 	defer f.Close()
 
 	w := csv.NewWriter(f)
-	defer w.Flush()
 
 	// write headers to file.
 	if err := w.Write(headers); err != nil {
@@ -126,6 +125,8 @@ func dumpCSV(path string, headers []string, records <-chan []string) error {
 			log.Fatalf("could not write record to csv: %v", err)
 		}
 	}
+
+	w.Flush()
 
 	// check for extra errors.
 	if err := w.Error(); err != nil {
