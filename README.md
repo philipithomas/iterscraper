@@ -82,7 +82,6 @@ iterscraper [flags]
 ## Errata
 
 * This is purpose-built for some internal scraping. It's not meant to be the scraping tool for every user case, but you're welcome to modify it for your purposes
-* On a `429 - too many requests` error, the app stops. This is because data integrity (being able to tell whether or not a page exists) is compromised. One possible fix is to turn down concurrency.
+* On a `429 - too many requests` error, the app logs and continues, ignoring the request.
 * The package will [follow up to 10 redirects](https://golang.org/pkg/net/http/#Get)
 * On a `404 - not found` error, the system will log the miss, then continue. It is not exported to the CSV.
-
