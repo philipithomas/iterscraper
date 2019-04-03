@@ -85,3 +85,6 @@ iterscraper [flags]
 * On a `429 - too many requests` error, the app logs and continues, ignoring the request.
 * The package will [follow up to 10 redirects](https://golang.org/pkg/net/http/#Get)
 * On a `404 - not found` error, the system will log the miss, then continue. It is not exported to the CSV.
+
+## Extensions
+* [calini/grape](https://github.com/calini/grape) is an extension of iterscraper that also adds the ability to swap the incremental indexes with a dictionary file, and query for different attributes.
