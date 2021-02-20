@@ -1,11 +1,11 @@
 language: go
 go:
-  - 1.6
+  - 1.16
   - tip
 
 sudo: false
 
 install:
-  - go get github.com/PuerkitoBio/goquery
+  - go mod download
 script:
   - bash test.sh
