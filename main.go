@@ -31,9 +31,7 @@ func main() {
 	flag.Parse()
 
 	columns := []string{*name, *address, *phone, *email}
-	headers := []string{"name", "address", "phone", "email"}
-	// url and id are added as the first two columns.
-	headers = append([]string{"url", "id"}, headers...)
+	headers := []string{"url", "id", "name", "address", "phone", "email"}
 
 	// create all tasks and send them to the channel.
 	type task struct {
